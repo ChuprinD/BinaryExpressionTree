@@ -26,6 +26,14 @@ class Node
         left_ = nullptr;
         right_ = nullptr;
         }
+
+    void print(int level);
+    Node* infix_create_tree(vector<string> str);
+    Node* postfix_create_tree(vector<string>& str);
+    Node* prefix_create_tree(vector<string>& str);
+    void print_infix();
+    void print_postfix();
+    void print_prefix();
     };
 
 bool is_extreme_parentheses(vector<string> s)
@@ -52,8 +60,18 @@ bool isNumber(string elem)
     return true;
     }
 
+void Node::print(int level)
+    {
+    if (this)
+        {
+        this->left_->print(level + 1);
+        for (int i = 0; i < level; i++) cout << "   ";
+        cout << this->elem_ << '\n';
+        this->right_->print(level + 1);
+        }
+    }
 
-Node* infix_create_tree(Node* tree, vector<string> str)
+Node* Node::infix_create_tree(vector<string> str)
     {  
     int balance = 0;
     int min_balance = 0;
@@ -76,10 +94,7 @@ Node* infix_create_tree(Node* tree, vector<string> str)
             }
         }
 
-    if (!tree)
-        tree = new Node(str[index]);
-    else
-        tree->elem_ = str[index];
+    this->elem_ = str[index];
 
     if (index != 0)
         {
@@ -104,95 +119,87 @@ Node* infix_create_tree(Node* tree, vector<string> str)
             if (str[i] == "(") balance++;
             if (str[i] == ")") balance--;
 
-            if (str[i] == ")" && balance <= 0)
+            if (str[i] == ")" && balance < 0)
                 continue;
 
             second.push_back(str[i]);
             }
+        this->left_ = new Node();
+        this->left_ = this->left_->infix_create_tree(first);
 
-        tree->left_ = infix_create_tree(tree->left_, first);
-        tree->right_ = infix_create_tree(tree->right_, second);
+        this->right_ = new Node();
+        this->right_ = this->right_->infix_create_tree(second);
         }
 
-    return tree;
+    return this;
     }
 
-Node* postfix_create_tree(Node* tree, vector<string>& str)
+Node* Node::postfix_create_tree(vector<string>& str)
     {
-    if (!tree)
-        tree = new Node(str[str.size() - 1]);
-    else
-        tree->elem_ = str[str.size() - 1];
+    this->elem_ = str[str.size() - 1];
 
     str.pop_back();
 
-    if (isNumber(tree->elem_)) return tree;
+    if (isNumber(this->elem_)) return this;
 
-    tree->right_ = postfix_create_tree(tree->right_, str);
-    tree->left_ = postfix_create_tree(tree->left_, str);
+    this->right_ = new Node();
+    this->right_ = this->right_->postfix_create_tree(str);
 
-    return tree;
+    this->left_ = new Node();
+    this->left_ = this->left_->postfix_create_tree(str);
+
+    return this;
     }
 
-Node* prefix_create_tree(Node* tree, vector<string>& str)
+Node* Node::prefix_create_tree(vector<string>& str)
     {
-    if (!tree)
-        tree = new Node(str[0]);
-    else
-        tree->elem_ = str[0];
+    this->elem_ = str[0];
 
     str.erase(str.begin());
 
-    if (isNumber(tree->elem_)) return tree;
+    if (isNumber(this->elem_)) return this;
 
-    tree->left_ = prefix_create_tree(tree->left_, str);
-    tree->right_ = prefix_create_tree(tree->right_, str);
+    this->left_ = new Node();
+    this->left_ = this->left_->prefix_create_tree(str);
+
+    this->right_ = new Node();
+    this->right_ = this->right_->prefix_create_tree(str);
   
-    return tree;
-    }
+    return this;
+    } 
 
-void print(Node* tree, int level)
-    {
-    if (tree)
-        {
-        print(tree->left_, level + 1);
-        for (int i = 0; i < level; i++) cout << "   ";
-        cout << tree->elem_ << '\n';
-        print(tree->right_, level + 1);
-        }
-    }
 
-void print_infix(Node* tree)
+void Node::print_infix()
     {
-    if (tree)
+    if (this && this->elem_ != "")
         {
-        if (!isNumber(tree->elem_))
+        if (!isNumber(this->elem_))
             cout << "(";
-        print_infix(tree->left_);
-        cout << tree->elem_;
-        print_infix(tree->right_);
-        if (!isNumber(tree->elem_))
+        this->left_->print_infix();
+        cout << this->elem_;
+        this->right_->print_infix();
+        if (!isNumber(this->elem_))
             cout << ")";
         }
     }
 
-void print_postfix(Node* tree)
+void Node::print_postfix()
     {
-    if (tree)
+    if (this && this->elem_ != "")
         {
-        print_postfix(tree->left_);
-        print_postfix(tree->right_);
-        cout << tree->elem_ << " ";
+        this->left_->print_postfix();
+        this->right_->print_postfix();
+        cout << this->elem_ << " ";
         }
     }
 
-void print_prefix(Node* tree)
+void Node::print_prefix()
     {
-    if (tree)
+    if (this && this->elem_ != "")
         {
-        cout << tree->elem_ << " ";
-        print_prefix(tree->left_);
-        print_prefix(tree->right_);
+        cout << this->elem_ << " ";
+        this->left_->print_prefix();
+        this->right_->print_prefix();
         }
     }
 
@@ -234,38 +241,38 @@ int main()
     
     if (type == "prefix")
         {
-        prefix_create_tree(&tree, s);
+        tree.prefix_create_tree(s);
         
         cout << "infix: ";
-        print_infix(&tree);
+        tree.print_infix();
         cout << endl;
 
         cout << "postfix: ";
-        print_postfix(&tree);
+        tree.print_postfix();
         cout << endl;
         }
     else if (type == "postfix")
         {
-        postfix_create_tree(&tree, s);
+        tree.postfix_create_tree(s);
 
         cout << "infix: ";
-        print_infix(&tree);
+        tree.print_infix();
         cout << endl;
 
         cout << "prefix: ";
-        print_prefix(&tree);
+        tree.print_prefix();
         cout << endl;
         }
     else
         {
-        infix_create_tree(&tree, s);
+        tree.infix_create_tree(s);
 
         cout << "postfix: ";
-        print_postfix(&tree);
+        tree.print_postfix();
         cout << endl;
 
         cout << "prefix: ";
-        print_prefix(&tree);
+        tree.print_prefix();
         cout << endl;
         }
 
